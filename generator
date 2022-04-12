@@ -2,19 +2,18 @@
 
 const puppeteer = require("puppeteer-core");
 
-urlGenerateEmail =
+const urlGenerateEmail =
   "https://www.1secmail.com/api/v1/?action=genRandomMailbox&count=1";
-urlCheckMessages =
+const urlCheckMessages =
   "https://www.1secmail.com/api/v1/?action=getMessages&login={email}&domain={domain}";
-urlFetchMessage =
+const urlFetchMessage =
   "https://www.1secmail.com/api/v1/?action=readMessage&login={email}&domain={domain}&id={id}";
-urlCreateAccount = "https://www.yahoofinanceapi.com/dashboard";
+const urlCreateAccount = "https://www.yahoofinanceapi.com/dashboard";
 
 (async () => {
   const browser = await puppeteer.launch({
     headless: true,
-    executablePath:
-      "/Users/danlevy/Programmation/Python/Yahoo-Finance-Api-Generator/node_modules/puppeteer/.local-chromium/mac-970485/chrome-mac/Chromium.app/Contents/MacOS/Chromium",
+    executablePath: "/usr/local/bin/chromium",
     args: [
       "--disable-gpu",
       "--disable-setuid-sandbox",
@@ -28,7 +27,8 @@ urlCreateAccount = "https://www.yahoofinanceapi.com/dashboard";
   let result = await page.evaluate(() => {
     return document.querySelector("body").innerText;
   });
-  email = JSON.parse(result)[0];
+
+  const email = JSON.parse(result)[0];
 
   await page.goto(
     urlCheckMessages
