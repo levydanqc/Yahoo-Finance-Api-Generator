@@ -1,0 +1,23 @@
+{
+  "name": "yahoo-finance-api-generator",
+  "version": "1.0.0",
+  "description": "Yahoo Finance Api Account Generator for bypassing free account limit of 100 calls/day.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/levydanqc/Yahoo-Finance-Api-Generator.git"
+  },
+  "author": "Dan Levy",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/levydanqc/Yahoo-Finance-Api-Generator/issues"
+  },
+  "homepage": "https://github.com/levydanqc/Yahoo-Finance-Api-Generator#readme",
+  "dependencies": {
+    "puppeteer": "^13.5.2",
+    "puppeteer-core": "^13.5.2"
+  }
+}

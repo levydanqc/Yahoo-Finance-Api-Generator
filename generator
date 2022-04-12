@@ -1,0 +1,109 @@
+#!/usr/local/bin/node
+
+const puppeteer = require("puppeteer-core");
+
+urlGenerateEmail =
+  "https://www.1secmail.com/api/v1/?action=genRandomMailbox&count=1";
+urlCheckMessages =
+  "https://www.1secmail.com/api/v1/?action=getMessages&login={email}&domain={domain}";
+urlFetchMessage =
+  "https://www.1secmail.com/api/v1/?action=readMessage&login={email}&domain={domain}&id={id}";
+urlCreateAccount = "https://www.yahoofinanceapi.com/dashboard";
+
+(async () => {
+  const browser = await puppeteer.launch({
+    headless: true,
+    executablePath:
+      "/Users/danlevy/Programmation/Python/Yahoo-Finance-Api-Generator/node_modules/puppeteer/.local-chromium/mac-970485/chrome-mac/Chromium.app/Contents/MacOS/Chromium",
+    args: [
+      "--disable-gpu",
+      "--disable-setuid-sandbox",
+      "--no-sandbox",
+      "--no-zygote",
+    ],
+  });
+  const page = await browser.newPage();
+  await page.goto(urlGenerateEmail);
+
+  let result = await page.evaluate(() => {
+    return document.querySelector("body").innerText;
+  });
+  email = JSON.parse(result)[0];
+
+  await page.goto(
+    urlCheckMessages
+      .replace("{email}", email.split("@")[0])
+      .replace("{domain}", email.split("@")[1])
+  );
+
+  const form = await fillForm(email, browser);
+
+  do {
+    await page.reload();
+    result = await page.evaluate(() => {
+      return document.querySelector("body").innerText;
+    });
+  } while (JSON.parse(result).length == 0);
+
+  const messages = JSON.parse(result);
+  let id;
+  for (let i = 0; i < messages.length; i++) {
+    if (messages[i].subject == "Your verification code") {
+      id = messages[i].id;
+    }
+  }
+  if (id) {
+    await page.goto(
+      urlFetchMessage
+        .replace("{email}", email.split("@")[0])
+        .replace("{domain}", email.split("@")[1])
+        .replace("{id}", id)
+    );
+    result = await page.evaluate(() => {
+      return document.querySelector("body").innerText;
+    });
+
+    let code = JSON.parse(result).body.match(/\d{6}/g);
+
+    await form.type("input[name=confirmation_code]", code);
+
+    const [button] = await form.$x("//button[contains(., 'Confirm')]");
+    await button.click();
+
+    const container = await form.waitForSelector(
+      ".DashboardElements>div:nth-child(1)"
+    );
+
+    let apikey = "";
+    do {
+      apikey = await container.evaluate((el) => el.textContent);
+    } while (apikey == "API key: ");
+
+    console.log(apikey.replace("API key: ", ""));
+  }
+
+  await browser.close();
+})();
+
+async function fillForm(email, browser) {
+  const page = await browser.newPage();
+  await page.goto(urlCreateAccount);
+  const tab = await page.$('div[role="tab"]:nth-child(2)');
+  const rect = await page.evaluate((tab) => {
+    const { x, y } = tab.getBoundingClientRect();
+    return { x, y };
+  }, tab);
+
+  await page.mouse.move(rect.x + 10, rect.y + 10);
+  await page.mouse.down();
+  await page.mouse.up();
+
+  await page.type("input[name=email]", email);
+  await page.type("input[name=password]", email);
+  await page.type("input[name=confirm_password]", email);
+
+  const [button] = await page.$x("//button[contains(., 'Create Account')]");
+  await button.click();
+
+  return page;
+}
